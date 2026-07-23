@@ -85,7 +85,7 @@ EXPLICIT_ALLOW_FILES = {
     # a bias toward one target. This is the ONLY engine/ file allowed to do so;
     # keeping it isolated is precisely why the rest of engine/ stays site-agnostic.
     # Matched by path SUFFIX so the exemption holds regardless of the skill
-    # directory name (insane-search, ultimate-browsing, ...).
+    # directory name (the engine may be vendored/mirrored under another name).
     "engine/phase0.py",
 }
 
@@ -100,8 +100,8 @@ def _scan_file(path: Path, root: Path) -> list[str]:
     rel = path.relative_to(root.parent)
     # Match by POSIX path SUFFIX: `.as_posix()` normalises Windows backslashes
     # (so the exemption is not silently defeated there), and the suffix match
-    # keeps it working regardless of the skill directory name (insane-search,
-    # ultimate-browsing, ...).
+    # keeps it working regardless of the skill directory name (the engine may be
+    # vendored/mirrored under another name).
     if any(rel.as_posix().endswith(suffix) for suffix in EXPLICIT_ALLOW_FILES):
         return []
 

@@ -2,7 +2,7 @@
 
 ## 0.12.0 — 2026-07-23
 
-Merge the omo-senpi engine improvements (verified before/after: 9/14 → 12/14 on a 14-site live bench). Rebased on top of 0.11.0; additive to the content-quality / retry / rescue work already on `main`.
+Adaptive-access engine improvements (verified before/after: 9/14 → 12/14 on a 14-site live bench). Additive to the 0.11.0 content-quality / retry / rescue work.
 
 - **Validator false-positive fixes**: challenge markers now use identifier-boundary matching (a feature-flag token ending in `captcha` is no longer a challenge); CF interstitial structural markers (`window._cf_chl_opt`, `orchestrate/chl_page`) are decisive at any body size; a single SOFT marker inside a large body (>20KB) is treated as a content mention, not a block.
 - **curl_cffi runtime target filter**: TLS impersonate candidates are intersected with the installed curl_cffi's supported set, so version skew never wastes attempts; profile `tls_impersonate_avoid` keeps empirical blacklists only.

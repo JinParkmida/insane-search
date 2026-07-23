@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U9 regression tests — omo-senpi merge (2026-07-20).
+"""U9 regression tests — engine merge (2026-07-20).
 
 Deterministic, network-free. Locks in the merged delta:
   * marker false-positive fixes (lookbehind, structural, soft-mention)
