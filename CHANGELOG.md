@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.12.1 — 2026-07-23
+
+Fixed — 429 대응·브라우저 예산 (검증 리서치 후속).
+
+- 429(rate-limit)가 TLS 그리드를 멈추는 것을 넘어 브라우저 폴백까지 차단하던 결함 수정 — TERMINAL 셋의 "그리드 중단"과 "벽(브라우저도 무익)" 역할을 분리(`_BROWSER_FUTILE_VALUES`=auth/404). 429 중단 시에도 브라우저 폴백과 R6 백오프 안내가 살아있다.
+- Playwright MCP 스텁(파이썬에서 실행 불가 안내용)이 브라우저 예산(max_browser_attempts=2)을 소진해 cloudflare_turnstile 프로필에서 실제 Chrome 폴백이 굶던 결함 수정 — 스텁은 attempts에 기록만 하고 예산은 소비하지 않음.
+- 회귀 테스트 `engine/tests/test_t7_browser_gate.py` 5종 추가(오프라인 모킹): 429→브라우저 진행 / 404→스킵 / 스텁 예산 무소비·실행 순서 / 예산 상한 유지 / 스텁 무동작.
+
 ## 0.12.0 — 2026-07-23
 
 Adaptive-access engine improvements (verified before/after: 9/14 → 12/14 on a 14-site live bench). Additive to the 0.11.0 content-quality / retry / rescue work.

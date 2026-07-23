@@ -44,7 +44,16 @@ from .url_transforms import iter_transformed
 
 
 _OK_VALUES = (Verdict.STRONG_OK.value, Verdict.WEAK_OK.value)
+# Role (a) — "stop the TLS diversity grid; more curl attempts cannot help".
+# 429 IS included here on purpose: hammering the grid only deepens rate-limiting.
 _TERMINAL_NONSUCCESS_VALUES = frozenset(v.value for v in TERMINAL_NONSUCCESS)
+# Role (b) — "the browser fallback is ALSO futile; this is a real wall".
+# 429 is deliberately EXCLUDED: it is transient, and both the R6 gate below and
+# SKILL.md recommend a browser / MCP retry after backoff. Only a true wall
+# (auth prompt, 404) means the rendered browser cannot help either.
+_BROWSER_FUTILE_VALUES = frozenset({
+    Verdict.AUTH_REQUIRED.value, Verdict.NOT_FOUND.value,
+})
 
 
 # --- Referer strategies (name → function of original URL) --------------------
@@ -1045,8 +1054,10 @@ def _fetch_core(
         grid_exhausted = True
         stop_reason = "exhausted"
 
-    # If a terminal-nonsuccess (404/auth/429) stopped us, browser won't help.
-    skip_browser = stop_reason in _TERMINAL_NONSUCCESS_VALUES
+    # Only a true wall (404/auth) makes the browser futile. A 429 stops the TLS
+    # grid (role a) but must NOT skip the browser fallback (role b): 429 is
+    # transient and the R6 gate / SKILL.md route it to a browser / MCP retry.
+    skip_browser = stop_reason in _BROWSER_FUTILE_VALUES
 
     # -------- Phase 3: Playwright fallback ----------------------------------
     if enable_playwright and not skip_browser:
@@ -1058,7 +1069,16 @@ def _fetch_core(
             for fb_name in fb_order:
                 if fb_name == "curl_grid_exhaust":
                     continue
-                if browser_used >= max_browser_attempts:
+                # A "playwright_mcp" entry can only be driven from the agent
+                # session — the executor returns a zero-work UNKNOWN stub (it
+                # cannot launch MCP from Python). Record that stub in the trace
+                # so the route stays visible, but do NOT let it consume a real
+                # browser budget slot: otherwise, e.g. cloudflare_turnstile's
+                # [playwright_mcp, protocol_stealth_chrome, playwright_real_chrome]
+                # would burn both max_browser_attempts=2 slots before the real
+                # Chrome executor is ever reached.
+                is_mcp_stub = fb_name.startswith("playwright_mcp")
+                if not is_mcp_stub and browser_used >= max_browser_attempts:
                     break
                 pw_attempt, pw_content = run_playwright_fallback(
                     url, profile_id=profile_used or "unknown_challenge",
@@ -1066,7 +1086,8 @@ def _fetch_core(
                     force_executor=fb_name, timeout=timeout if timeout and timeout > 30 else 90,
                 )
                 trace.append(pw_attempt)
-                browser_used += 1
+                if not is_mcp_stub:
+                    browser_used += 1
                 if pw_attempt.verdict in _OK_VALUES:
                     # Render-merge: the executor stashes the rendered innerText
                     # on the attempt; the rescue gate keeps whichever of
