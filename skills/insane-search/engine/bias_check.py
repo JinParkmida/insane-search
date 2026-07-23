@@ -84,8 +84,7 @@ EXPLICIT_ALLOW_FILES = {
     # the SANCTIONED exception — these are official no-auth public endpoints, not
     # a bias toward one target. This is the ONLY engine/ file allowed to do so;
     # keeping it isolated is precisely why the rest of engine/ stays site-agnostic.
-    # Matched by path SUFFIX so the exemption holds regardless of the skill
-    # directory name (the engine may be vendored/mirrored under another name).
+    # Matched by path suffix so it doesn't depend on the leading directories.
     "engine/phase0.py",
 }
 
@@ -98,10 +97,7 @@ def _line_is_exempt(line: str, ext: str) -> bool:
 def _scan_file(path: Path, root: Path) -> list[str]:
     """Return list of violation strings for this file."""
     rel = path.relative_to(root.parent)
-    # Match by POSIX path SUFFIX: `.as_posix()` normalises Windows backslashes
-    # (so the exemption is not silently defeated there), and the suffix match
-    # keeps it working regardless of the skill directory name (the engine may be
-    # vendored/mirrored under another name).
+    # `.as_posix()` normalises Windows backslashes so the suffix match holds there too.
     if any(rel.as_posix().endswith(suffix) for suffix in EXPLICIT_ALLOW_FILES):
         return []
 
