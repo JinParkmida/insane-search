@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0 — 2026-07-29
+
+Added — Threads 영상 라우트 (Phase 0).
+
+- yt-dlp에 익스트랙터가 없어 media 경로로 커버 불가하던 Threads(threads.com/threads.net) 영상 포스트를 Phase 0 라우터가 직접 처리: curl_cffi safari 지문 익명 GET → 인라인 JSON에서 URL shortcode(`"code":"…"`) 최근접 `video_versions` 블록 선택(페이지에 관련 포스트 영상 블록이 다수 혼재하므로 필수) → `\/`·유니코드 이스케이프 해제 → 서명 CDN URL 목록을 `{"post_code","video_urls"}` JSON으로 반환. 다운로드는 engine 밖 — 서명 URL은 plain curl로 충분(실측: h264+AAC progressive).
+- 영상 없는 포스트·프로필 URL은 ok=False로 일반 체인 폴백 — 라우트가 콘텐츠 종류를 삼키지 않는다.
+- `tests/coverage_battery.py`에 threads 케이스 추가, SKILL.md/PLATFORMS.md/references/media.md 문서화(서명 URL 만료·DASH-only·캐러셀 미검증 경계 포함).
+
 ## 0.12.1 — 2026-07-23
 
 Fixed — 429 대응·브라우저 예산 (검증 리서치 후속).
